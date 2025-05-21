@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import dotenv from 'dotenv';
 import { connectToDB, createTables } from './config/database';
 import sphereRoutes from './routes/spheres';
+import achievementRoutes from './routes/achievements';
 
 dotenv.config(); // Load environment variables AT THE VERY TOP
 
@@ -15,6 +16,7 @@ app.get('/test', (req: Request, res: Response) => {
 });
 
 app.use('/api/spheres', sphereRoutes);
+app.use('/api/achievements', achievementRoutes);
 
 const startServer = async () => {
     try {
