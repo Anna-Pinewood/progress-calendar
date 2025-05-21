@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   api:
     build:
@@ -20,13 +18,15 @@ services:
   db:
     image: postgres:13
     ports:
-      - "5433:5432"
+      - "${POSTGRES_PORT_ON_HOST:-5433}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
-      POSTGRES_DB: ${POSTGRES_DB:-progress_calendar_db}
+      POSTGRES_USER: ${DB_INIT_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_INIT_PASSWORD:-changeme}
+      POSTGRES_DB: ${DB_INIT_NAME:-progress_calendar_db}
+    env_file:
+      - .env
 
 volumes:
   pgdata: 
