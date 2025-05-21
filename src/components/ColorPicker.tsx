@@ -60,7 +60,7 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ spheres, colors, onChange }) 
         )}
 
         {isOpen && (
-          <div className="absolute z-10 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+          <div className="absolute z-30 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
             <div className="py-1" role="menu">
               {spheres.map((sphere) => (
                 <button
@@ -86,7 +86,7 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ spheres, colors, onChange }) 
       {showColorPicker && selectedSphere && (
         <div
           ref={colorPickerRef}
-          className="absolute z-20 mt-2"
+          className="absolute z-40 mt-2"
           style={{ top: '100%', left: '60px' }}
         >
           <div className="p-4 bg-white rounded-lg shadow-lg">
