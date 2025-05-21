@@ -20,8 +20,17 @@ const Calendar: React.FC<CalendarProps> = ({
 }) => {
   const [collapsedSphere, setCollapsedSphere] = useState<string | null>(null);
   const [collapsedDate, setCollapsedDate] = useState<string | null>(null);
-  
+
   const { dates, spheres: unsortedSpheres, achievementMap } = groupAchievementsByDateAndSphere(achievements);
+
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
 
   // Sort spheres based on their order
   const spheres = unsortedSpheres.sort((a, b) => {
@@ -70,10 +79,10 @@ const Calendar: React.FC<CalendarProps> = ({
     <div className="overflow-x-auto">
       <div className="inline-block min-w-full">
         <div className="overflow-hidden shadow-sm border border-gray-200 rounded-lg">
-          <motion.div 
+          <motion.div
             className="grid"
             layout
-            style={{ 
+            style={{
               gridTemplateColumns: `150px repeat(${visibleSpheres.length}, minmax(200px, 1fr))`,
               transition: 'all 0.3s ease-in-out'
             }}
@@ -82,7 +91,7 @@ const Calendar: React.FC<CalendarProps> = ({
             <div className="p-2 font-semibold text-center border-b border-r border-gray-300 bg-gray-50 sticky left-0 z-10">
               Date
             </div>
-            
+
             {visibleSpheres.map((sphere, index) => (
               <motion.div
                 key={sphere}
@@ -92,8 +101,8 @@ const Calendar: React.FC<CalendarProps> = ({
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.3 }}
               >
-                <SphereHeader 
-                  sphere={sphere} 
+                <SphereHeader
+                  sphere={sphere}
                   onClick={() => toggleSphere(sphere)}
                   isCollapsed={collapsedSphere === sphere}
                   onMoveLeft={index > 0 ? () => onMoveSphere(sphere, 'left') : undefined}
@@ -102,7 +111,7 @@ const Calendar: React.FC<CalendarProps> = ({
                 />
               </motion.div>
             ))}
-            
+
             {/* Calendar Rows */}
             {visibleDates.map((date) => (
               <React.Fragment key={date}>
@@ -113,14 +122,13 @@ const Calendar: React.FC<CalendarProps> = ({
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.3 }}
-                  className={`p-2 border-r border-b border-gray-200 bg-gray-50 sticky left-0 cursor-pointer hover:bg-gray-100 ${
-                    collapsedDate === date ? 'bg-gray-100' : ''
-                  }`}
+                  className={`p-2 border-r border-b border-gray-200 bg-gray-50 sticky left-0 cursor-pointer hover:bg-gray-100 ${collapsedDate === date ? 'bg-gray-100' : ''
+                    }`}
                   onClick={() => toggleDate(date)}
                 >
-                  {date}
+                  {formatDate(date)}
                 </motion.div>
-                
+
                 {/* Achievement Cells */}
                 {visibleSpheres.map((sphere) => (
                   <motion.div
