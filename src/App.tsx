@@ -4,6 +4,7 @@ import AchievementForm from './components/AchievementForm';
 import Calendar from './components/Calendar';
 import ColorPicker from './components/ColorPicker';
 import ReportModal from './components/ReportModal';
+import RandomQuote from './components/RandomQuote';
 import { Achievement, SphereSettingsMap, SphereSetting } from './types';
 import { formatDate } from './utils/parseInput';
 
@@ -282,8 +283,9 @@ function App() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gray-50">
+      <RandomQuote />
+      <div className="container mx-auto px-4 py-8">
         <h1 className="text-2xl font-bold mb-6">Achievement Calendar</h1>
 
         <AchievementForm onAddAchievement={handleAddAchievement} />
