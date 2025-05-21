@@ -3,6 +3,7 @@ import LoginForm from './components/LoginForm';
 import AchievementForm from './components/AchievementForm';
 import Calendar from './components/Calendar';
 import ColorPicker from './components/ColorPicker';
+import ReportModal from './components/ReportModal';
 import { Achievement, SphereSettingsMap, SphereSetting } from './types';
 import { formatDate } from './utils/parseInput';
 
@@ -31,6 +32,10 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [sphereSettings, setSphereSettings] = useState<SphereSettingsMap>({});
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [reportStartDate, setReportStartDate] = useState<string>(formatDate(new Date()));
+  const [generatedReportText, setGeneratedReportText] = useState<string>('');
+  const [sortedSphereNames, setSortedSphereNames] = useState<string[]>([]);
 
   const fetchSpheres = useCallback(async () => {
     if (!isAuthenticated) return;
@@ -52,6 +57,7 @@ function App() {
       });
       console.log('[App.tsx] Processed sphereSettings to be set:', newSphereSettings);
       setSphereSettings(newSphereSettings);
+      setSortedSphereNames(Object.keys(newSphereSettings).sort((a, b) => newSphereSettings[a].order - newSphereSettings[b].order));
     } catch (error) {
       console.error("Failed to fetch spheres:", error);
       setSphereSettings({}); // Clear on error
@@ -222,13 +228,52 @@ function App() {
     }
   };
 
+  const handleGenerateReport = () => {
+    const startDate = new Date(reportStartDate);
+    const filteredAchievements = achievements.filter(ach => {
+      const achDate = new Date(ach.date);
+      return achDate >= startDate;
+    });
+
+    if (filteredAchievements.length === 0) {
+      setGeneratedReportText("No achievements found from the selected date.");
+      setIsReportModalOpen(true);
+      return;
+    }
+
+    const achievementsBySphere: { [key: string]: string[] } = {};
+    filteredAchievements.forEach(ach => {
+      if (!achievementsBySphere[ach.sphere]) {
+        achievementsBySphere[ach.sphere] = [];
+      }
+      achievementsBySphere[ach.sphere].push(ach.text);
+    });
+
+    let report = "";
+    // Use sortedSphereNames from component scope to maintain the order from the UI
+    sortedSphereNames.forEach(sphereName => {
+      if (achievementsBySphere[sphereName]) {
+        report += `- ${sphereName.toUpperCase()}:\n`;
+        achievementsBySphere[sphereName].forEach(text => {
+          report += `\t- ${text}\n`;
+        });
+        report += `\n`; // Add a newline between spheres
+      }
+    });
+
+    setGeneratedReportText(report.trim());
+    setIsReportModalOpen(true);
+  };
+
+  const handleCopyReport = () => {
+    navigator.clipboard.writeText(generatedReportText)
+      .then(() => console.log("Report copied to clipboard!"))
+      .catch(err => console.error("Failed to copy report: ", err));
+  };
+
   if (!isAuthenticated) {
     return <LoginForm onLogin={handleLogin} />;
   }
-
-  const sortedSphereNames = Object.keys(sphereSettings).sort(
-    (a, b) => sphereSettings[a].order - sphereSettings[b].order
-  );
 
   // This is passed to ColorPicker, which expects an array of sphere names
   // and an object mapping sphere names to colors.
@@ -243,21 +288,50 @@ function App() {
 
         <AchievementForm onAddAchievement={handleAddAchievement} />
 
-        {sortedSphereNames.length > 0 && (
-          <div className="mb-6">
-            <ColorPicker
-              spheres={sortedSphereNames} // Pass sorted names
-              colors={sphereColorsForPicker}
-              onChange={handleSphereColorChange}
-            />
+        <div className="my-6 flex flex-col sm:flex-row sm:items-end sm:justify-between">
+          {sortedSphereNames.length > 0 && (
+            <div className="mb-4 sm:mb-0 sm:mr-4">
+              <ColorPicker
+                spheres={sortedSphereNames} // Pass sorted names
+                colors={sphereColorsForPicker}
+                onChange={handleSphereColorChange}
+              />
+            </div>
+          )}
+          <div className="flex flex-col sm:flex-row sm:items-end space-y-2 sm:space-y-0 sm:space-x-2">
+            <div>
+              <label htmlFor="report-start-date" className="block text-sm font-medium text-gray-700 mb-1">
+                Report Start Date:
+              </label>
+              <input
+                type="date"
+                id="report-start-date"
+                value={reportStartDate}
+                onChange={(e) => setReportStartDate(e.target.value)}
+                className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2"
+              />
+            </div>
+            <button
+              onClick={handleGenerateReport}
+              className="px-4 py-2 bg-green-200 text-green-800 rounded-md hover:bg-green-300 transition-colors focus:outline-none focus:ring-2 focus:ring-green-200 focus:ring-opacity-50 self-end sm:self-auto"
+            >
+              Create a Report
+            </button>
           </div>
-        )}
+        </div>
 
         <Calendar
           achievements={achievements}
           onDeleteAchievement={handleDeleteAchievement}
           sphereSettings={sphereSettings} // Calendar can use the full map
           onMoveSphere={handleMoveSphere}
+        />
+
+        <ReportModal
+          isOpen={isReportModalOpen}
+          onClose={() => setIsReportModalOpen(false)}
+          reportText={generatedReportText}
+          onCopy={handleCopyReport}
         />
 
         <div className="mt-4 text-sm text-gray-500">
