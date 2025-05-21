@@ -93,15 +93,43 @@ router.post('/', async (req, res) => {
 // Delete an achievement by ID
 router.delete('/:id', async (req, res) => {
     const { id } = req.params;
+    let client; // Declare client outside try block for access in finally
     try {
-        const deleteResult = await pool.query('DELETE FROM achievements WHERE id = $1 RETURNING id', [parseInt(id)]);
-        if (deleteResult.rowCount === 0) {
+        client = await pool.connect(); // Get a client from the pool
+        await client.query('BEGIN'); // Start transaction
+
+        // Get sphere_id before deleting the achievement
+        const achievementResult = await client.query('SELECT sphere_id FROM achievements WHERE id = $1', [parseInt(id)]);
+        if (achievementResult.rowCount === 0) {
+            await client.query('ROLLBACK');
             return res.status(404).send('Achievement not found');
         }
+        const sphereId = achievementResult.rows[0].sphere_id;
+
+        // Delete the achievement
+        const deleteResult = await client.query('DELETE FROM achievements WHERE id = $1 RETURNING id', [parseInt(id)]);
+        // No need to check rowCount again as we did it above
+
+        // Check if the sphere has any other achievements
+        const remainingAchievementsResult = await client.query('SELECT id FROM achievements WHERE sphere_id = $1 LIMIT 1', [sphereId]);
+
+        if (remainingAchievementsResult.rowCount === 0) {
+            // No other achievements for this sphere, so delete the sphere
+            await client.query('DELETE FROM spheres WHERE id = $1', [sphereId]);
+        }
+
+        await client.query('COMMIT'); // Commit transaction
         res.status(204).send();
     } catch (error) {
+        if (client) {
+            await client.query('ROLLBACK'); // Rollback on error
+        }
         console.error('Error deleting achievement:', error);
         res.status(500).json({ message: 'Error deleting achievement', error: (error as Error).message });
+    } finally {
+        if (client) {
+            client.release(); // Release client back to the pool
+        }
     }
 });
 
