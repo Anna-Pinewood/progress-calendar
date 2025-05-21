@@ -8,7 +8,7 @@ services:
     volumes:
       - ./api:/usr/src/app
       # Add this to avoid overwriting node_modules in the container by the host's empty one
-      - /usr/src/app/node_modules 
+      - api_node_modules:/usr/src/app/node_modules
     depends_on:
       - db
     env_file:
@@ -29,4 +29,5 @@ services:
       - .env
 
 volumes:
-  pgdata: 
+  pgdata:
+  api_node_modules: {} 

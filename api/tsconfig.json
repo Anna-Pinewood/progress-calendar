@@ -9,17 +9,15 @@
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
         "resolveJsonModule": true,
-        "typeRoots": [
-            "./node_modules/@types",
-            "./src/types"
-        ]
+        "moduleResolution": "node",
+        "sourceMap": true
     },
     "include": [
-        "server.ts",
-        "src/**/*.ts"
+        "**/*.ts"
     ],
     "exclude": [
         "node_modules",
+        "dist",
         "**/*.spec.ts"
     ]
 }
