@@ -1,15 +1,20 @@
 import express, { Request, Response } from 'express';
 import dotenv from 'dotenv';
 import { connectToDB, createTables } from './config/database';
+import sphereRoutes from './routes/spheres';
 
 dotenv.config(); // Load environment variables AT THE VERY TOP
 
 const app = express();
 const port = process.env.PORT || 8000;
 
+app.use(express.json());
+
 app.get('/test', (req: Request, res: Response) => {
     res.json({ message: 'API is running' });
 });
+
+app.use('/api/spheres', sphereRoutes);
 
 const startServer = async () => {
     try {

@@ -209,6 +209,41 @@ const [collapsedDate, setCollapsedDate] = useState<string | null>(null);
     *   **POST**: Отправка запроса с данными новой сферы создает запись в таблице `spheres` и возвращает созданный объект. Проверить уникальность `name`.
     *   **GET**: Запрос возвращает массив всех сфер из БД, отсортированных по `position`.
     *   **PATCH**: Отправка запроса с `color` или `position` для существующей сферы обновляет соответствующие поля в БД и возвращает обновленный объект.
+    *   **Примеры `curl` команд для тестирования (выполнять после запуска докер-контейнеров)**
+        ```bash
+        # Получить все сферы (изначально будет пусто)
+        curl http://localhost:8000/api/spheres
+
+        # Создать новую сферу "Здоровье" с цветом
+        curl -X POST -H "Content-Type: application/json" -d '{"name": "Здоровье", "color": "#4CAF50"}' http://localhost:8000/api/spheres
+
+        # Создать новую сферу "Работа" с позицией 1
+        curl -X POST -H "Content-Type: application/json" -d '{"name": "Работа", "position": 1}' http://localhost:8000/api/spheres
+        
+        # Создать сферу "Хобби" без цвета и позиции (позиция должна быть авто-инкрементирована)
+        curl -X POST -H "Content-Type: application/json" -d '{"name": "Хобби"}' http://localhost:8000/api/spheres
+
+        # Попытка создать сферу с существующим именем "Работа" (должна быть ошибка 409)
+        curl -X POST -H "Content-Type: application/json" -d '{"name": "Работа"}' http://localhost:8000/api/spheres 
+
+        # Получить все сферы (должны быть "Работа" pos:1, "Здоровье" pos:2, "Хобби" pos:3 - или аналогично в зависимости от порядка создания и авто-инкремента)
+        curl http://localhost:8000/api/spheres
+
+        # Обновить цвет сферы с ID=1 (предположим, это "Работа")
+        curl -X PATCH -H "Content-Type: application/json" -d '{"color": "#FFC107"}' http://localhost:8000/api/spheres/1
+
+        # Обновить позицию сферы с ID=2 (предположим, это "Здоровье")
+        curl -X PATCH -H "Content-Type: application/json" -d '{"position": 0}' http://localhost:8000/api/spheres/2
+
+        # Обновить и цвет, и позицию сферы с ID=3 (предположим, это "Хобби")
+        curl -X PATCH -H "Content-Type: application/json" -d '{"color": "#03A9F4", "position": 5}' http://localhost:8000/api/spheres/3
+
+        # Попытка обновить несуществующую сферу (ID=99)
+        curl -X PATCH -H "Content-Type: application/json" -d '{"color": "#FFFFFF"}' http://localhost:8000/api/spheres/99
+
+        # Получить все сферы еще раз для проверки обновлений
+        curl http://localhost:8000/api/spheres
+        ```
 
 ---
 
