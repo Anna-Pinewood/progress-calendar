@@ -7,7 +7,7 @@ import SphereHeader from './SphereHeader';
 
 interface CalendarProps {
   achievements: Achievement[];
-  onDeleteAchievement: (id: string) => void;
+  onDeleteAchievement: (id: number) => void;
   sphereSettings: SphereSettingsMap;
   onMoveSphere: (sphere: string, direction: 'left' | 'right') => void;
 }

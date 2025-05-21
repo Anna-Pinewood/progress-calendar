@@ -1,5 +1,5 @@
 export interface Achievement {
-  id: string;
+  id: number;
   date: string;
   sphere: string;
   text: string;
@@ -11,9 +11,10 @@ export interface AchievementsByDateAndSphere {
   achievementMap: Record<string, Record<string, Achievement[]>>;
 }
 
-export interface SphereSettings {
+export interface SphereSetting {
+  id: number;
   color: string;
   order: number;
 }
 
-export type SphereSettingsMap = Record<string, SphereSettings>;
+export type SphereSettingsMap = Record<string, SphereSetting>;

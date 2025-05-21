@@ -3,12 +3,12 @@ import { Achievement } from '../types';
 
 interface CalendarCellProps {
   achievements: Achievement[];
-  onDelete: (id: string) => void;
+  onDelete: (id: number) => void;
   color: string;
 }
 
 const CalendarCell: React.FC<CalendarCellProps> = ({ achievements, onDelete, color }) => {
-  const handleContextMenu = (e: React.MouseEvent, id: string) => {
+  const handleContextMenu = (e: React.MouseEvent, id: number) => {
     e.preventDefault();
     onDelete(id);
   };
