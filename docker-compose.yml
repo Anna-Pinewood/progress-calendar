@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./api:/usr/src/app
+      # Add this to avoid overwriting node_modules in the container by the host's empty one
+      - /usr/src/app/node_modules 
+    depends_on:
+      - db
+    env_file:
+      - ./api/.env
+    # command: npm run dev # Or your actual start command
+
+  db:
+    image: postgres:13
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_DB: ${POSTGRES_DB:-progress_calendar_db}
+
+volumes:
+  pgdata: 
