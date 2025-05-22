@@ -5,8 +5,10 @@ import Calendar from './components/Calendar';
 import ColorPicker from './components/ColorPicker';
 import ReportModal from './components/ReportModal';
 import RandomQuote from './components/RandomQuote';
+import TickAnimation from './components/TickAnimation';
 import { Achievement, SphereSettingsMap, SphereSetting } from './types';
 import { formatDate } from './utils/parseInput';
+import { AnimatePresence } from 'framer-motion';
 
 // Define a type for the raw sphere data from the API
 interface ApiSphere {
@@ -37,6 +39,7 @@ function App() {
   const [reportStartDate, setReportStartDate] = useState<string>(formatDate(new Date()));
   const [generatedReportText, setGeneratedReportText] = useState<string>('');
   const [sortedSphereNames, setSortedSphereNames] = useState<string[]>([]);
+  const [showTick, setShowTick] = useState(false);
 
   const fetchSpheres = useCallback(async () => {
     if (!isAuthenticated) return;
@@ -129,13 +132,15 @@ function App() {
       console.log('[App.tsx] Achievement added successfully via API, refetching data...');
       await fetchAchievements();
       await fetchSpheres();
+      setShowTick(true);
+      setTimeout(() => setShowTick(false), 2000);
       console.log('[App.tsx] Data refetched after adding achievement.');
     } catch (error) {
       console.error("Failed to add achievement:", error);
     }
   };
 
-  const handleDeleteAchievement = async (achievementId: number) => { // ID is now number
+  const handleDeleteAchievement = async (achievementId: number) => {
     try {
       const response = await fetch(`${API_BASE_URL}/achievements/${achievementId}`, {
         method: 'DELETE',
@@ -167,12 +172,11 @@ function App() {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      // const updatedApiSphere: ApiSphere = await response.json();
       setSphereSettings(prev => ({
         ...prev,
         [sphereName]: {
           ...prev[sphereName],
-          color //: updatedApiSphere.color || '#f3f4f6',
+          color
         }
       }));
     } catch (error) {
@@ -285,6 +289,9 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-50">
       <RandomQuote />
+      <AnimatePresence>
+        {showTick && <TickAnimation />}
+      </AnimatePresence>
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-2xl font-bold mb-6">Achievement Calendar</h1>
 
@@ -294,7 +301,7 @@ function App() {
           {sortedSphereNames.length > 0 && (
             <div className="mb-4 sm:mb-0 sm:mr-4">
               <ColorPicker
-                spheres={sortedSphereNames} // Pass sorted names
+                spheres={sortedSphereNames}
                 colors={sphereColorsForPicker}
                 onChange={handleSphereColorChange}
               />
@@ -325,7 +332,7 @@ function App() {
         <Calendar
           achievements={achievements}
           onDeleteAchievement={handleDeleteAchievement}
-          sphereSettings={sphereSettings} // Calendar can use the full map
+          sphereSettings={sphereSettings}
           onMoveSphere={handleMoveSphere}
         />
 
