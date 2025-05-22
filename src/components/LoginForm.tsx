@@ -8,9 +8,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  // In a real app, this would be read from an environment variable
-  // For this demo, we'll hardcode it
-  const CORRECT_PASSWORD = 'secret7786';
+  // Read password from environment variable
+  const CORRECT_PASSWORD = import.meta.env.VITE_APP_PASSWORD;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
