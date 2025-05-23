@@ -4,7 +4,7 @@ services:
       context: ./api
       dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     volumes:
       - ./api:/usr/src/app
       # Add this to avoid overwriting node_modules in the container by the host's empty one
@@ -38,7 +38,7 @@ services:
   db:
     image: postgres:13
     ports:
-      - "${POSTGRES_PORT_ON_HOST:-5433}:5432"
+      - "127.0.0.1:${POSTGRES_PORT_ON_HOST:-5433}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     environment:

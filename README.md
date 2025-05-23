@@ -19,3 +19,15 @@ Progress Calendar is a web application designed to help users track their achiev
 
 1. Copy .env.example to .env in both `api/` and `src/` directories.
 2. Run `docker compose up` in the root directory.
+
+## How to
+- Добавить достижение за предыдущий день:
+```
+curl -X POST http://localhost:8000/api/achievements \
+  -H "Content-Type: application/json" \
+  -d '{
+    "sphere_name": "ЛИЧНОСТЬ",
+    "date": "2025-05-22",
+    "text": "текст достижения"
+  }'
+```
