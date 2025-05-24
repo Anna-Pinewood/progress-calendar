@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Achievement, SphereSettingsMap } from '../types';
 import { groupAchievementsByDateAndSphere } from '../utils/parseInput';
@@ -41,31 +41,40 @@ const Calendar: React.FC<CalendarProps> = ({
 
   const toggleSphere = (sphere: string) => {
     setCollapsedSphere(current => current === sphere ? null : sphere);
-    setCollapsedDate(null);
+    setCollapsedDate(null); // If a sphere is toggled, uncollapse any date
   };
 
   const toggleDate = (date: string) => {
     setCollapsedDate(current => current === date ? null : date);
-    setCollapsedSphere(null); // Allow collapsing date even if a sphere is selected
+    setCollapsedSphere(null); // If a date is toggled, uncollapse any sphere
   };
 
-  const getVisibleDates = () => {
-    if (collapsedSphere) {
-      return dates.filter((date: string) => achievementMap[date][collapsedSphere!]?.length > 0);
-    }
-    return dates;
-  };
+  // Determine which spheres to actually render columns for
+  let currentDisplayedSpheres: string[];
+  if (collapsedSphere) {
+    currentDisplayedSpheres = [collapsedSphere];
+  } else if (collapsedDate) {
+    // When a date is collapsed, show only spheres that have achievements on this date
+    currentDisplayedSpheres = spheres.filter((sphere: string) => achievementMap[collapsedDate!]?.[sphere]?.length > 0);
+    // If no spheres have achievements for the collapsed date, currentDisplayedSpheres will be empty.
+  } else {
+    currentDisplayedSpheres = spheres; // Show all spheres
+  }
 
-  const getVisibleSpheres = () => {
-    if (collapsedDate) {
-      return spheres.filter((sphere: string) => achievementMap[collapsedDate!][sphere]?.length > 0);
-    }
+  // Determine which dates to render rows for
+  const visibleDates = useMemo(() => {
+    let newVisibleDates = dates;
     if (collapsedSphere) {
-      return [collapsedSphere];
+      // Filter dates to only those that have achievements for the collapsed sphere
+      newVisibleDates = dates.filter((date: string) => achievementMap[date]?.[collapsedSphere!]?.length > 0);
     }
-    // No slicing here, the scroll container will handle it.
-    return spheres;
-  };
+    // If collapsedDate is active, we still show all dates initially, 
+    // but currentDisplayedSpheres will be filtered, effectively showing less data horizontally.
+    // The user's primary interaction for date filtering is clicking a date, which highlights it.
+    // Actual filtering of dates (rows) is primarily driven by collapsedSphere.
+    return newVisibleDates;
+  }, [dates, collapsedSphere, achievementMap]);
+
 
   if (achievements.length === 0) {
     return (
@@ -75,80 +84,75 @@ const Calendar: React.FC<CalendarProps> = ({
     );
   }
 
-  const visibleDates = getVisibleDates();
-  const visibleSpheres = getVisibleSpheres();
-  const displayedSpheres = collapsedSphere ? [collapsedSphere] : spheres;
+  const numDateCols = 1;
+  const numSphereCols = currentDisplayedSpheres.length;
+
+  const gridStyle = {
+    display: 'grid',
+    gridTemplateColumns: `minmax(150px, auto) ${numSphereCols > 0 ? `repeat(${numSphereCols}, minmax(200px, 1fr))` : ''}`,
+    minWidth: `calc(150px + ${numSphereCols * 200}px)`, // Sum of min-widths
+    transition: 'grid-template-columns 0.3s ease-in-out',
+  };
 
   return (
     <div className="overflow-hidden shadow-sm border border-gray-200 rounded-lg">
-      <div className="flex"> {/* Flex container for sticky date and scrollable spheres */}
-        {/* Date Column Header and Cells (Sticky) */}
-        <div className="sticky left-0 z-20 bg-gray-50 flex flex-col">
-          {/* Header for Date Column */}
-          <div className="p-2 font-semibold text-center border-b border-r border-gray-300 h-[65px] flex items-center justify-center min-w-[150px]">
+      <div className="overflow-x-auto"> {/* Scroll container for the entire grid */}
+        <motion.div
+          className="grid" // This class might be redundant if using style.display='grid'
+          style={gridStyle}
+          layout // Enable layout animations for the grid itself
+        >
+          {/* Row 1: HEADERS */}
+          {/* Date Header (Sticky) */}
+          <div className="sticky left-0 z-30 bg-gray-100 p-2 font-semibold text-center border-b border-r border-gray-300 min-h-[65px] flex items-center justify-center min-w-[150px]">
             Date
           </div>
-          {/* Date Cells */}
-          {visibleDates.map((date: string) => (
+
+          {/* Sphere Headers */}
+          {currentDisplayedSpheres.map((sphere: string, index: number) => (
             <motion.div
-              key={date}
-              layout
+              key={sphere}
+              layout // Animate layout changes for sphere headers
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className={`p-2 border-r border-b border-gray-200 bg-gray-50 cursor-pointer hover:bg-gray-100 min-h-[60px] flex items-center min-w-[150px] ${collapsedDate === date ? 'bg-gray-100 font-semibold' : ''
-                }`}
-              onClick={() => toggleDate(date)}
-              style={{ minHeight: collapsedSphere && !achievementMap[date][collapsedSphere!]?.length ? '0px' : '60px' }} // Adjust height for empty cells when sphere is collapsed
+              // Wrapper div for SphereHeader, ensuring it's a grid item
+              className="border-b border-r border-gray-300 min-h-[65px]" // Match date header style
             >
-              {formatDate(date)}
+              <SphereHeader
+                sphere={sphere}
+                onClick={() => toggleSphere(sphere)}
+                isCollapsed={collapsedSphere === sphere}
+                onMoveLeft={!collapsedSphere && !collapsedDate && index > 0 ? () => onMoveSphere(sphere, 'left') : undefined}
+                onMoveRight={!collapsedSphere && !collapsedDate && index < currentDisplayedSpheres.length - 1 ? () => onMoveSphere(sphere, 'right') : undefined}
+                color={sphereSettings[sphere]?.color || 'bg-gray-100'}
+              />
             </motion.div>
           ))}
-        </div>
 
-        {/* Scrollable Container for Sphere Headers and Cells */}
-        <div className="overflow-x-auto flex-grow">
-          <motion.div
-            className="grid"
-            layout
-            style={{
-              // Adjust gridTemplateColumns: Date column is handled by its own div.
-              // We now manage columns for spheres. We ensure at least one column or up to MAX_VISIBLE_SPHERES if not collapsed.
-              // If a sphere is collapsed, it shows 1 column. Otherwise, it shows up to MAX_VISIBLE_SPHERES or all if less.
-              gridTemplateColumns: `repeat(${collapsedSphere ? 1 : Math.min(visibleSpheres.length, MAX_VISIBLE_SPHERES)}, minmax(200px, 1fr))`,
-              // Ensure the grid itself can expand to hold all spheres if not collapsed.
-              // The parent 'overflow-x-auto' will handle the scrolling.
-              minWidth: collapsedSphere ? '200px' : `${visibleSpheres.length * 200}px`,
-              transition: 'grid-template-columns 0.3s ease-in-out'
-            }}
-          >
-            {/* Sphere Headers */}
-            {displayedSpheres.map((sphere: string, index: number) => (
+          {/* Data Rows: Date Cell + Sphere Cells */}
+          {visibleDates.map((date: string) => (
+            <React.Fragment key={date}> {/* Each fragment's children form a conceptual grid row */}
+              {/* Date Cell (Sticky) */}
               <motion.div
-                key={sphere}
+                key={`${date}-datecell`}
                 layout
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.3 }}
-                className={`${collapsedSphere && sphere !== collapsedSphere ? 'hidden' : ''}`}
+                className={`sticky left-0 z-20 bg-gray-50 p-2 border-r border-b border-gray-200 cursor-pointer hover:bg-gray-100 min-h-[60px] flex items-center min-w-[150px] ${collapsedDate === date ? 'bg-gray-100 font-semibold' : ''
+                  }`}
+                onClick={() => toggleDate(date)}
               >
-                <SphereHeader
-                  sphere={sphere}
-                  onClick={() => toggleSphere(sphere)}
-                  isCollapsed={collapsedSphere === sphere}
-                  onMoveLeft={!collapsedSphere && index > 0 ? () => onMoveSphere(sphere, 'left') : undefined}
-                  onMoveRight={!collapsedSphere && index < displayedSpheres.length - 1 ? () => onMoveSphere(sphere, 'right') : undefined}
-                  color={sphereSettings[sphere]?.color || 'bg-gray-100'}
-                />
+                {formatDate(date)}
               </motion.div>
-            ))}
 
-            {/* Calendar Rows (Cells for Spheres) */}
-            {visibleDates.map((date: string) => (
-              <React.Fragment key={`${date}-spheres`}>
-                {displayedSpheres.map((sphere: string) => (
+              {/* Sphere Cells for this date */}
+              {currentDisplayedSpheres.map((sphere: string) => {
+                const cellAchievements = achievementMap[date]?.[sphere] || [];
+                return (
                   <motion.div
                     key={`${date}-${sphere}`}
                     layout
@@ -156,20 +160,23 @@ const Calendar: React.FC<CalendarProps> = ({
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.3 }}
-                    className={`${collapsedSphere && sphere !== collapsedSphere ? 'hidden' : ''} ${collapsedDate && !achievementMap[date][sphere]?.length ? 'hidden' : ''}`}
-                    style={{ minHeight: collapsedSphere && !achievementMap[date][collapsedSphere!]?.length ? '0px' : 'auto' }}
+                    // This motion.div is the grid cell. CalendarCell is its content.
+                    // CalendarCell itself applies border and min-height.
+                    // The className for hiding when a date is collapsed and cell is empty is removed
+                    // as currentDisplayedSpheres handles column visibility, and empty cells will just render as empty.
+                    className="bg-white" // Ensure background for the cell area before CalendarCell's own background
                   >
                     <CalendarCell
-                      achievements={achievementMap[date]?.[sphere] || []}
+                      achievements={cellAchievements}
                       onDelete={onDeleteAchievement}
                       color={sphereSettings[sphere]?.color || 'bg-gray-100'}
                     />
                   </motion.div>
-                ))}
-              </React.Fragment>
-            ))}
-          </motion.div>
-        </div>
+                );
+              })}
+            </React.Fragment>
+          ))}
+        </motion.div>
       </div>
     </div>
   );

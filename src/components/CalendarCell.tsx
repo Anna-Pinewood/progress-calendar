@@ -14,11 +14,11 @@ const CalendarCell: React.FC<CalendarCellProps> = ({ achievements, onDelete, col
   };
 
   if (achievements.length === 0) {
-    return <div className="border border-gray-200 p-2 min-h-[60px]"></div>;
+    return <div className="border border-gray-200 p-2 min-h-[60px] h-full"></div>;
   }
 
   return (
-    <div className="border border-gray-200 p-2 min-h-[60px] bg-white">
+    <div className="border border-gray-200 p-2 min-h-[60px] h-full bg-white">
       {achievements.map((achievement) => (
         <div
           key={achievement.id}
