@@ -55,7 +55,7 @@ const AchievementForm: React.FC<AchievementFormProps> = ({ onAddAchievement }) =
         )}
         
         <div className="text-sm text-gray-500 mt-1">
-          Format: "SPHERE: Your achievement" (e.g., "HEALTH: Ran 5km today")
+          {/* Format: "SPHERE: Your achievement" (e.g., "HEALTH: Ran 5km today") */}
         </div>
       </form>
     </div>
