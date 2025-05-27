@@ -22,6 +22,8 @@ const Calendar: React.FC<CalendarProps> = ({
 }) => {
   const [collapsedSphere, setCollapsedSphere] = useState<string | null>(null);
   const [collapsedDate, setCollapsedDate] = useState<string | null>(null);
+  const [hoveredSphere, setHoveredSphere] = useState<string | null>(null);
+  const [hoveredDate, setHoveredDate] = useState<string | null>(null);
 
   const { dates, spheres: unsortedSpheres, achievementMap } = groupAchievementsByDateAndSphere(achievements);
 
@@ -119,6 +121,8 @@ const Calendar: React.FC<CalendarProps> = ({
               transition={{ duration: 0.3 }}
               // Wrapper div for SphereHeader, ensuring it's a grid item
               className="border-b border-r border-gray-300 min-h-[65px]" // Match date header style
+              onMouseEnter={() => setHoveredSphere(sphere)}
+              onMouseLeave={() => setHoveredSphere(null)}
             >
               <SphereHeader
                 sphere={sphere}
@@ -145,6 +149,8 @@ const Calendar: React.FC<CalendarProps> = ({
                 className={`sticky left-0 z-20 bg-gray-50 p-2 border-r border-b border-gray-200 cursor-pointer hover:bg-gray-100 min-h-[60px] flex items-center min-w-[150px] ${collapsedDate === date ? 'bg-gray-100 font-semibold' : ''
                   }`}
                 onClick={() => toggleDate(date)}
+                onMouseEnter={() => setHoveredDate(date)}
+                onMouseLeave={() => setHoveredDate(null)}
               >
                 {formatDate(date)}
               </motion.div>
@@ -152,6 +158,7 @@ const Calendar: React.FC<CalendarProps> = ({
               {/* Sphere Cells for this date */}
               {currentDisplayedSpheres.map((sphere: string) => {
                 const cellAchievements = achievementMap[date]?.[sphere] || [];
+                const isHighlighted = hoveredSphere === sphere || hoveredDate === date;
                 return (
                   <motion.div
                     key={`${date}-${sphere}`}
@@ -164,12 +171,13 @@ const Calendar: React.FC<CalendarProps> = ({
                     // CalendarCell itself applies border and min-height.
                     // The className for hiding when a date is collapsed and cell is empty is removed
                     // as currentDisplayedSpheres handles column visibility, and empty cells will just render as empty.
-                    className="bg-white" // Ensure background for the cell area before CalendarCell's own background
+                    className={`transition-colors duration-200 ${isHighlighted ? 'bg-gray-100' : 'bg-white'}`} // Ensure background for the cell area before CalendarCell's own background
                   >
                     <CalendarCell
                       achievements={cellAchievements}
                       onDelete={onDeleteAchievement}
                       color={sphereSettings[sphere]?.color || 'bg-gray-100'}
+                      isHighlighted={isHighlighted}
                     />
                   </motion.div>
                 );
