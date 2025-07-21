@@ -4,6 +4,7 @@ import AchievementForm from './components/AchievementForm';
 import Calendar from './components/Calendar';
 import ColorPicker from './components/ColorPicker';
 import ReportModal from './components/ReportModal';
+import GoalsModal from './components/GoalsModal';
 import RandomQuote from './components/RandomQuote';
 import TickAnimation from './components/TickAnimation';
 import { Achievement, SphereSettingsMap, SphereSetting } from './types';
@@ -36,6 +37,7 @@ function App() {
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [sphereSettings, setSphereSettings] = useState<SphereSettingsMap>({});
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [isGoalsModalOpen, setIsGoalsModalOpen] = useState(false);
   const [reportStartDate, setReportStartDate] = useState<string>(formatDate(new Date()));
   const [generatedReportText, setGeneratedReportText] = useState<string>('');
   const [sortedSphereNames, setSortedSphereNames] = useState<string[]>([]);
@@ -326,6 +328,12 @@ function App() {
             >
               Create a Report
             </button>
+            <button
+              onClick={() => setIsGoalsModalOpen(true)}
+              className="px-4 py-2 bg-purple-200 text-purple-800 rounded-md hover:bg-purple-300 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-200 focus:ring-opacity-50 self-end sm:self-auto"
+            >
+              Мои цели
+            </button>
           </div>
         </div>
 
@@ -341,6 +349,11 @@ function App() {
           onClose={() => setIsReportModalOpen(false)}
           reportText={generatedReportText}
           onCopy={handleCopyReport}
+        />
+
+        <GoalsModal
+          isOpen={isGoalsModalOpen}
+          onClose={() => setIsGoalsModalOpen(false)}
         />
 
         <div className="mt-4 text-sm text-gray-500">

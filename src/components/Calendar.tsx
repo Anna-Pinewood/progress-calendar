@@ -12,7 +12,9 @@ interface CalendarProps {
   onMoveSphere: (sphere: string, direction: 'left' | 'right') => void;
 }
 
-const MAX_VISIBLE_SPHERES = 8; // Define the maximum number of visible spheres
+const SPHERE_COLUMN_WIDTH_PX = 250; // Define the width for each sphere column
+const CUTOFF_DATE = '2025-07-21'; // Date from which to apply cutoff color
+const CUTOFF_COLOR = 'bg-blue-50'; // Color to apply for dates >= CUTOFF_DATE
 
 const Calendar: React.FC<CalendarProps> = ({
   achievements,
@@ -26,6 +28,11 @@ const Calendar: React.FC<CalendarProps> = ({
   const [hoveredDate, setHoveredDate] = useState<string | null>(null);
 
   const { dates, spheres: unsortedSpheres, achievementMap } = groupAchievementsByDateAndSphere(achievements);
+
+  // Helper function to check if a date should use cutoff color
+  const shouldUseCutoffColor = (dateStr: string) => {
+    return dateStr >= CUTOFF_DATE;
+  };
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -58,9 +65,8 @@ const Calendar: React.FC<CalendarProps> = ({
   } else if (collapsedDate) {
     // When a date is collapsed, show only spheres that have achievements on this date
     currentDisplayedSpheres = spheres.filter((sphere: string) => achievementMap[collapsedDate!]?.[sphere]?.length > 0);
-    // If no spheres have achievements for the collapsed date, currentDisplayedSpheres will be empty.
   } else {
-    currentDisplayedSpheres = spheres; // Show all spheres
+    currentDisplayedSpheres = spheres; // Show all spheres (sorted by order)
   }
 
   // Determine which dates to render rows for
@@ -87,13 +93,13 @@ const Calendar: React.FC<CalendarProps> = ({
   }
 
   const numDateCols = 1;
-  const numSphereCols = currentDisplayedSpheres.length;
+  const numActualSphereCols = currentDisplayedSpheres.length;
 
   const gridStyle = {
     display: 'grid',
-    gridTemplateColumns: `minmax(150px, auto) ${numSphereCols > 0 ? `repeat(${numSphereCols}, minmax(200px, 1fr))` : ''}`,
-    minWidth: `calc(150px + ${numSphereCols * 200}px)`, // Sum of min-widths
-    transition: 'grid-template-columns 0.3s ease-in-out',
+    gridTemplateColumns: `minmax(150px, auto) ${numActualSphereCols > 0 ? `repeat(${numActualSphereCols}, ${SPHERE_COLUMN_WIDTH_PX}px)` : ''}`,
+    minWidth: `calc(150px + ${numActualSphereCols * SPHERE_COLUMN_WIDTH_PX}px)`, // Sum of min-widths for all actual spheres
+    transition: 'grid-template-columns 0.3s ease-in-out', // Transition might be less relevant with fixed widths but can stay
   };
 
   return (
@@ -159,6 +165,7 @@ const Calendar: React.FC<CalendarProps> = ({
               {currentDisplayedSpheres.map((sphere: string) => {
                 const cellAchievements = achievementMap[date]?.[sphere] || [];
                 const isHighlighted = hoveredSphere === sphere || hoveredDate === date;
+                const useCutoffColor = shouldUseCutoffColor(date);
                 return (
                   <motion.div
                     key={`${date}-${sphere}`}
@@ -178,6 +185,8 @@ const Calendar: React.FC<CalendarProps> = ({
                       onDelete={onDeleteAchievement}
                       color={sphereSettings[sphere]?.color || 'bg-gray-100'}
                       isHighlighted={isHighlighted}
+                      useCutoffColor={useCutoffColor}
+                      cutoffColor={CUTOFF_COLOR}
                     />
                   </motion.div>
                 );

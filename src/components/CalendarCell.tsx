@@ -6,9 +6,11 @@ interface CalendarCellProps {
   onDelete: (id: number) => void;
   color: string;
   isHighlighted?: boolean;
+  useCutoffColor?: boolean;
+  cutoffColor?: string;
 }
 
-const CalendarCell: React.FC<CalendarCellProps> = ({ achievements, onDelete, color, isHighlighted = false }) => {
+const CalendarCell: React.FC<CalendarCellProps> = ({ achievements, onDelete, color, isHighlighted = false, useCutoffColor = false, cutoffColor = 'bg-white' }) => {
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
 
   const handleContextMenu = (e: React.MouseEvent, id: number) => {
@@ -28,14 +30,22 @@ const CalendarCell: React.FC<CalendarCellProps> = ({ achievements, onDelete, col
     });
   };
 
-  const TRUNCATE_LENGTH = 50; // Or any length you prefer
+  const TRUNCATE_LENGTH = 40; // Or any length you prefer
+
+  // Determine background color based on cutoff and highlight state
+  const getBackgroundColor = () => {
+    if (isHighlighted) {
+      return 'bg-gray-100';
+    }
+    return useCutoffColor ? cutoffColor : 'bg-white';
+  };
 
   if (achievements.length === 0) {
-    return <div className={`border border-gray-200 p-2 min-h-[60px] h-full transition-colors duration-200 ${isHighlighted ? 'bg-gray-100' : 'bg-white'}`}></div>;
+    return <div className={`border border-gray-200 p-2 min-h-[60px] h-full transition-colors duration-200 ${getBackgroundColor()}`}></div>;
   }
 
   return (
-    <div className={`border border-gray-200 p-2 min-h-[60px] h-full transition-colors duration-200 ${isHighlighted ? 'bg-gray-100' : 'bg-white'}`}>
+    <div className={`border border-gray-200 p-2 min-h-[60px] h-full transition-colors duration-200 ${getBackgroundColor()}`}>
       {achievements.map((achievement) => {
         const isExpanded = expandedIds.has(achievement.id);
         const displayText =

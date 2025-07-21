@@ -26,8 +26,15 @@ Progress Calendar is a web application designed to help users track their achiev
 curl -X POST http://localhost:8000/api/achievements \
   -H "Content-Type: application/json" \
   -d '{
-    "sphere_name": "ЛИЧНОСТЬ",
-    "date": "2025-05-22",
-    "text": "текст достижения"
+    "sphere_name": "КАРЬЕРА SENIOR",
+    "date": "2025-07-16",
+    "text": "Провела ещё один собес"
   }'
 ```
+
+- Переименовать сферу:
+```
+docker compose exec db psql -U postgres -d progress_calendar_db
+UPDATE spheres SET name = 'КАРЬЕРА SENIOR' WHERE name = 'КАРЬЕРА БОЛЬШЕ ДЕНЕГ';
+```
+
